@@ -6,13 +6,15 @@ from typing import TypeVar
 from genpy import Duration
 from genpy import Time
 from geometry_msgs.msg import TransformStamped
+from tf2_ros.buffer_interface import TransformRegistration
 
 T = TypeVar('T')
 
-REGISTRY = {}
-
 
 class BufferInterface(ABC):
+
+    def __init__(self):
+        self._registration = TransformRegistration()
 
     async def transform(
         self,
@@ -20,7 +22,7 @@ class BufferInterface(ABC):
         target_frame: str,
         timeout: Optional[Duration] = None
     ) -> T:
-        do_transform = REGISTRY.get(type(object_stamped))
+        do_transform = self._registration.get(type(object_stamped))
         return do_transform(
             object_stamped,
             await self.lookup_transform(
@@ -37,7 +39,7 @@ class BufferInterface(ABC):
         fixed_frame: str,
         timeout: Optional[Duration] = None
     ) -> T:
-        do_transform = REGISTRY.get(type(object_stamped))
+        do_transform = self._registration.get(type(object_stamped))
         return do_transform(
             object_stamped,
             await self.lookup_transform_full(
